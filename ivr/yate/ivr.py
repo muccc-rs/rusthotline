@@ -280,5 +280,5 @@ class YateIVR(YateAsync):
         for index, extension in enumerate(extensions):
             msg_params["callto."+str(index + 2)] = "sip/"+extension.split(';')[0]
         ring_msg = MessageRequest("chan.masquerade", msg_params)
-        await self.send_message_async(ring_msg)
-        await asyncio.sleep(10000)
+        result = await self.send_message_async(ring_msg)
+        return result
