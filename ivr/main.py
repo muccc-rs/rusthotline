@@ -103,48 +103,46 @@ async def call_operators(ivr: YateIVR, callername: str):
     await ivr.fork_call(admins, callername)
 
 async def hotline(ivr:YateIVR):
-    try:
-        # Welcome to the rust hotline, for german press 1, for english press 2
-        await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/intro.sln"))
-        log_call(ivr, "Call enter")
+    # Welcome to the rust hotline, for german press 1, for english press 2
+    await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/intro.sln"))
+    log_call(ivr, "Call enter")
 
+    lang = "de"
+    
+    # ToDo: use wait_channel_event !
+    plz = await ivr.read_dtmf_symbols(1, 12)
+
+    if plz == "1":
         lang = "de"
-        
-        # ToDo: use wait_channel_event !
-        plz = await ivr.read_dtmf_symbols(1, 12)
+    elif plz == "2":
+        lang = "en"
+    elif plz == "":
+        callername = ""
+        caller_id = ivr.call_params.get("caller")
+        caller_name = ivr.call_params.get("callername")
+        if caller_id:
+            callername += caller_id
+        if caller_name:
+            callername = callername + "/" + caller_name
+        await call_operators(ivr, callername)
+    # For general questions 1, compiler errors 2, rewrite in rust 3, unsafe rust 4
+    await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/main_menu_{}.sln".format(lang)))
 
-        if plz == "1":
-            lang = "de"
-        elif plz == "2":
-            lang = "en"
-        elif plz == "":
-            callername = ""
-            caller_id = ivr.call_params.get("caller")
-            caller_name = ivr.call_params.get("callername")
-            if caller_id:
-                callername += caller_id
-            if caller_name:
-                callername = callername + "/" + caller_name
-            await call_operators(ivr, callername)
-        # For general questions 1, compiler errors 2, rewrite in rust 3, unsafe rust 4
-        await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/main_menu_{}.sln".format(lang)))
+    # ToDo: use wait_channel_event !
+    plz = await ivr.read_dtmf_symbols(1, 23)
 
-        # ToDo: use wait_channel_event !
-        plz = await ivr.read_dtmf_symbols(1, 23)
+    if plz == "" or plz == "1" or plz == "3" or plz == "4":
+        caller_id = ivr.call_params.get("caller")
+        caller_name = ivr.call_params.get("callername")
+        callername = lang + "-" + plz + "/"
+        if caller_id:
+            callername += caller_id
+        if caller_name:
+            callername = callername + "/" + caller_name
+        await call_operators(ivr, callername)
+    elif plz == "2":
+        await handle_error_code(ivr, lang)
 
-        if plz == "" or plz == "1" or plz == "3" or plz == "4":
-            caller_id = ivr.call_params.get("caller")
-            caller_name = ivr.call_params.get("callername")
-            callername = lang + "-" + plz + "/"
-            if caller_id:
-                callername += caller_id
-            if caller_name:
-                callername = callername + "/" + caller_name
-            await call_operators(ivr, callername)
-        elif plz == "2":
-            await handle_error_code(ivr, lang)
-    except:
-        await ivr.ring_extension("sip:8631@voip.eventphone.de")
 
 app = YateIVR()
 app.run(main)
