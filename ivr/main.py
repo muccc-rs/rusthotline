@@ -87,6 +87,10 @@ async def admin_setup(ivr: YateIVR):
         await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/admin_sign_out.sln"), complete=True)
     elif state_input == "3":
         await ivr.ring_extension("sip:8631@voip.eventphone.de")
+    elif state_input == "4":
+        await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/crab_rave.sln"), complete=True, repeat=True)
+    elif state_input == "5":
+        await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/ninian_cat.sln"), complete=True, repeat=True)
         # await ivr.fork_call(["sip:8631@voip.eventphone.de"], "admin")
 
 async def call_operators(ivr: YateIVR, callername: str):
