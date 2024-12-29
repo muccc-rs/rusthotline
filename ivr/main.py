@@ -109,6 +109,7 @@ async def hotline(ivr:YateIVR):
 
     lang = "de"
     
+    # ToDo: use wait_channel_event !
     plz = await ivr.read_dtmf_symbols(1, 12)
 
     if plz == "1":
@@ -116,15 +117,24 @@ async def hotline(ivr:YateIVR):
     elif plz == "2":
         lang = "en"
     elif plz == "":
-        callername = ivr.call_params.get("caller") + "/" + ivr.call_params.get("callername")
+        callername = "unknown"
+        caller_id = ivr.call_params.get("caller")
+        caller_name = ivr.call_params.get("callername")
+        if caller_id and caller_name:
+            callername = caller_id + "/" + caller_name
         await call_operators(ivr, callername)
     # For general questions 1, compiler errors 2, rewrite in rust 3, unsafe rust 4
     await ivr.play_soundfile(os.path.join(SOUNDS_PATH, "messages/main_menu_{}.sln".format(lang)))
 
+    # ToDo: use wait_channel_event !
     plz = await ivr.read_dtmf_symbols(1, 23)
 
     if plz == "" or plz == "1" or plz == "3" or plz == "4":
-        callername = lang + "/"+ ivr.call_params.get("caller") + "/" + ivr.call_params.get("callername")
+        caller_id = ivr.call_params.get("caller")
+        caller_name = ivr.call_params.get("callername")
+        callername = lang
+        if caller_id and caller_name:
+            callername = lang + "/"+ caller_id + "/" + caller_name
         await call_operators(ivr, callername)
     elif plz == "2":
         await handle_error_code(ivr, lang)
